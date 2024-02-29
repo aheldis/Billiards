@@ -26,9 +26,9 @@ class Line extends Shape{
 class Ball{
   constructor(ball_color, radius=0.2) {
     this.color = ball_color
-    this.position = vec3(0, -1, 0)
-    this.velocity = vec3(0, -1, 0)
-    this.acceleration = vec3(0, -1, 0)
+    this.position = vec3(0, 0, 0)
+    this.velocity = vec3(0, 0, 0)
+    this.acceleration = vec3(0, 0, 0)
     this.radius=radius
   }
 }
@@ -39,8 +39,18 @@ class PhysicsEngine{
     this.right = right
     this.top = top
     this.bottom = bottom
+    this.friction_coef = 2.0
   }
-
+  apply_friction(balls){
+    for(let i=0; i<balls.length; i++){
+      balls[i].acceleration =  balls[i].velocity.normalized().times(-this.friction_coef)
+    }
+  }
+  update_velocity(balls, dt){
+    for(let i=0; i<balls.length; i++){
+      balls[i].velocity = balls[i].velocity.plus(balls[i].acceleration.times(dt))
+    }
+  }
   update_positions(balls, dt){
     for(let i=0; i<balls.length; i++){
       balls[i].position = balls[i].position.plus(balls[i].velocity.times(dt))
@@ -130,16 +140,20 @@ const Part_one_hermite_base = defs.Part_one_hermite_base =
 
         this.ball_location = vec3(1, 1, 1);
         this.ball_radius = 0.25;
-        this.init_balls(150)
+        this.init_balls(9)
         this.physics = new PhysicsEngine()
 
       }
       init_balls(N){
         this.balls = []
+        const init_v = 6
+        const init_p = 3
+
+
         for (let i=0; i<N; i++){
           this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)))
-          this.balls[i].position = vec3(Math.random()*3, -1, Math.random()*3)
-          this.balls[i].velocity = vec3(Math.random() * 3, 0, Math.random() * 3 )
+          this.balls[i].position = vec3(Math.random()*init_p, -1, Math.random()*init_p)
+          this.balls[i].velocity = vec3(Math.random() * init_v, 0, Math.random() * init_v )
         }
       }
 
@@ -175,7 +189,7 @@ const Part_one_hermite_base = defs.Part_one_hermite_base =
           // perspective() are field of view, aspect ratio, and distances to the near plane and far plane.
 
           // !!! Camera changed here
-          Shader.assign_camera( Mat4.look_at (vec3 (10, 10, 10), vec3 (0, 0, 0), vec3 (0, 1, 0)), this.uniforms );
+          Shader.assign_camera( Mat4.look_at (vec3 (6, 7, 7), vec3 (0, 0, 0), vec3 (0, 1, 0)), this.uniforms );
           //Shader.assign_camera( Mat4.look_at (vec3 (0, 0, 3), vec3 (0, 0, 0), vec3 (0, 1, 0)), this.uniforms );
         }
         this.uniforms.projection_transform = Mat4.perspective( Math.PI/4, caller.width/caller.height, 1, 100 );
@@ -225,6 +239,8 @@ export class Collisions extends Part_one_hermite_base
 
     for ( ; t_sim <= t_next; t_sim += t_step ) {
       this.physics.collide_walls(this.balls)
+      this.physics.apply_friction(this.balls)
+      this.physics.update_velocity(this.balls, t_step)
       this.physics.update_positions(this.balls, t_step)
     }
     this.draw_balls(caller)

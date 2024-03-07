@@ -28,9 +28,11 @@ import {Text_Demo}
 import {Transforms_Sandbox_Base, Transforms_Sandbox}
     from "./examples/transforms-sandbox.js";
 
-import {Collisions} from "./collisions.js";
+// import {Collisions} from "./collisions.js";
 import {Part_two_spring} from "./part_two_spring.js";
 import {Part_three_chain} from "./part_three_chain.js";
+
+import {Main} from "./main.js";
 
 Object.assign (defs,
     {Minimal_Webgl_Demo},
@@ -43,17 +45,17 @@ Object.assign (defs,
     {Scene_To_Texture_Demo},
     {Text_Demo},
     {Transforms_Sandbox_Base, Transforms_Sandbox},
-    {Part_one_hermite: Collisions},
+    {Main},
     {Part_two_spring},
     {Part_three_chain}
 );
 
 // ******************** SELECT THE DEMO TO DISPLAY:
 
-let scenes = {1: Collisions, 2: Part_two_spring, 3: Part_three_chain};
+let scenes = {1: Main, 2: Part_two_spring, 3: Part_three_chain};
 const scene_selector = (i) => scenes[i];
 
-const main_scene        =Collisions; // default
+const main_scene        = Main; // default
 const additional_scenes = [];
 
 export {main_scene, scene_selector, additional_scenes, defs};

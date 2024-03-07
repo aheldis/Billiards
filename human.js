@@ -1,7 +1,7 @@
 import {tiny, defs} from './examples/common.js';
 
 // Pull these names into this module's scope for convenience:
-const {vec3, vec4, color, Mat4, Shape, Material, Shader, Texture, Component} = tiny;
+const {vec3, vec4, color, Mat4, Shape, Material, Shader, Texture, Component, Matrix} = tiny;
 
 const shapes = {
 	'sphere': new defs.Subdivision_Sphere(5),
@@ -22,9 +22,16 @@ export const Articulated_Human =
 				specularity: .5,
 				color: color(.9, .5, .9, 1)
 			};
+			this.materials.cue_wood = {
+				shader: phong,
+				ambient: .5,
+				diffusivity: .9,
+				specularity: .5,
+				color: color(184 / 255, 90 / 255, 27 / 255, 1)
+			};
 
 			const human_cfg = {
-				root_loc: [0, 1, 7],
+				root_loc: [-1, 1, 7],
 				torso_scale: [1, 1.8, 0.5],
 
 			};
@@ -76,8 +83,8 @@ export const Articulated_Human =
 			this.r_wrist.set_dof(true, false, true);
 
 			// CUE
-			let cue_transform = Mat4.scale(2, .1, .1);
-			cue_transform.pre_multiply(Mat4.translation(0.9, 0, 0));
+			let cue_transform = Mat4.scale(.05, .05, 4.5);
+			cue_transform.pre_multiply(Mat4.translation(0.1, 0, 1));
 			this.cue_node = new Node("cue", shapes.capped_cylinder, cue_transform);
 			// rl_arm->r_wrist->r_hand->cue
 			const cue_location = Mat4.translation(0.4, 0, 0);
@@ -86,7 +93,7 @@ export const Articulated_Human =
 
 
 			// add the only end-effector
-			const r_hand_end_local_pos = vec4(0.8, 0, 0, 1);
+			const r_hand_end_local_pos = vec4(0, 0, 3.4, 1);
 			this.end_effector = new End_Effector("cue", this.cue, r_hand_end_local_pos);
 			this.cue.end_effector = this.end_effector;
 
@@ -176,28 +183,41 @@ export const Articulated_Human =
 			this.ll_leg_node.children_arcs.push(this.l_leg_joint3);
 			this.l_leg_joint3.set_dof(true, false, true);
 
+			// JOINT INIT ROTATIONS
+			this.l_shoulder.articulation_matrix.pre_multiply(Mat4.rotation(1.0, 0, 0, 1));
+			this.l_shoulder.articulation_matrix.pre_multiply(Mat4.rotation(-1.0, 1, 0, 0));
+			this.l_elbow.articulation_matrix.pre_multiply(Mat4.rotation(1.5, 0, 0, 1));
+			this.l_elbow.articulation_matrix.pre_multiply(Mat4.rotation(1.9, 1, 0, 0));
+
+			// this.r_shoulder.articulation_matrix.pre_multiply(Mat4.rotation(1.2, 0, 0, 1));
+			// this.r_shoulder.articulation_matrix.pre_multiply(Mat4.rotation(1.0, 1, 0, 0));
+			// this.r_elbow.articulation_matrix.pre_multiply(Mat4.rotation(-140 / 360 * 6.28, 0, 1, 0));
+			// this.r_elbow.articulation_matrix.pre_multiply(Mat4.rotation(20 / 360 * 6.28, 0, 0, 1));
+
+			this.root.articulation_matrix.pre_multiply(Mat4.rotation(-20 / 360 * 6.28, 1, 0, 0));
+			this.r_leg_joint1.articulation_matrix.pre_multiply(Mat4.rotation(10 / 360 * 6.28, 1, 0, 0));
+			this.l_leg_joint1.articulation_matrix.pre_multiply(Mat4.rotation(20 / 360 * 6.28, 1, 0, 0));
+
 			// here I only use 7 dof
 			this.dof = 7;
 			this.Jacobian = null;
 			// this.theta = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01];
-			this.theta = [0, 0, 0, 0, 0, 0, 0];
+			// this.theta = [0, 0, 0, 0, 0, 0, 0];
+			this.theta = [-0.7195828326280601, -0.3469771747754726, -0.8196895446147598, 1.179378091176949, 1.256796052649982, 2.48486777925487, -0.11516360945991651];
 			this.apply_theta();
-
-			// JOINT INIT ROTATIONS
-			// this.l_shoulder.articulation_matrix.pre_multiply(Mat4.rotation(0.9, 0, 0, 1));
-			// this.l_elbow.articulation_matrix.pre_multiply(Mat4.rotation(0.9, 0, 0, 1))
-			// this.r_shoulder.articulation_matrix.pre_multiply(Mat4.rotation(0.8, 0, 0, 1));
-			// this.r_shoulder.articulation_matrix.pre_multiply(Mat4.rotation(-0.7, 0, 1, 0));
-			// this.r_elbow.articulation_matrix.pre_multiply(Mat4.rotation(-1.9, 0, 0, 1));
-			this.cue.articulation_matrix.pre_multiply(Mat4.rotation(1.57, 0, 0, 1));
-			// this.cue.articulation_matrix.pre_multiply(Mat4.rotation(1.57, 1, 0, 0));
-			// this.
 		}
 
 		// mapping from global theta to each joint theta
 		apply_theta() {
-			this.theta[2] = Math.min(-0.1, this.theta[2]);  // Limit shoulder
-			this.theta[1] = Math.min(-0.1, this.theta[1]);  // Limit shoulder
+			console.log(this.theta.slice(5, 7));
+			this.theta[2] = Math.max(-0.4, Math.min(0.1, this.theta[2]));  // Limit shoulder
+			this.theta[1] = Math.max(-0.7, Math.min(-0.9, this.theta[1]));  // Limit shoulder
+			// this.theta[1] = -.9
+			this.theta[0] = -1
+			this.theta[3] = Math.max(-0.9, Math.min(0.9, this.theta[3]));
+			this.theta[4] = Math.max(-0.9, Math.min(2.0, this.theta[4]));
+			this.theta[3] = 0;
+			// this.theta[6] = 0;
 			this.r_shoulder.update_articulation(this.theta.slice(0, 3));
 			this.r_elbow.update_articulation(this.theta.slice(3, 5));
 			this.r_wrist.update_articulation(this.theta.slice(5, 7));
@@ -233,35 +253,27 @@ export const Articulated_Human =
 				}
 			}
 
-			// console.log("J", J);
-			// console.log("Theta", this.theta);
 			return J; // 3x7 in my case.
 		}
 
 		calculate_delta_theta(J, dx) {
 			const A = math.multiply(math.transpose(J), J);
-			// console.log("A", A);
 			const b = math.multiply(math.transpose(J), dx);
-			// console.log("b", b);
 			let x = [...Array(this.dof)].map(e => Array(1).fill(0.01));
 			try {
 				x = math.lusolve(A, b)
 			} catch (err) {
 				console.log(err);
-				// console.log(this.theta);
-				let rand_theta = (Math.random()-0.5) / 10
+				let rand_theta = (Math.random() - 0.5) / 10
 				// this.theta += [0, 0, 0, 0, 0, 0, 0];
 				// this.apply_theta();
-				// console.log(dx);
 				this.move_end_effector_relative([[rand_theta], [rand_theta], [rand_theta]]);
 				// x = this.theta.map((v, i) => v + dtheta[i][0]);
 			}
-			for (let i = 0; i < this.dof; i++){
+			for (let i = 0; i < this.dof; i++) {
 				const change_limit = 0.05;
 				x[i][0] = Math.min(change_limit, Math.max(-change_limit, x[i][0]));
 			}
-			// console.log("x", x);
-			// console.log("b", b);
 			return x;
 		}
 
@@ -312,6 +324,8 @@ export const Articulated_Human =
 				const node = arc.child_node;
 				const T = node.transform_matrix;
 				matrix.post_multiply(T);
+				if (node.name === "cue")
+					material = this.materials.cue_wood;
 				node.shape.draw(webgl_manager, uniforms, matrix, material);
 
 				matrix = this.matrix_stack.pop();
@@ -334,46 +348,9 @@ export const Articulated_Human =
 			const dtheta = this.calculate_delta_theta(J, dx);
 			for (let i = 0; i < this.dof; i++)
 				if (dtheta[i][0] === 0)
-					dtheta[i][0] = dtheta[i][0] + 0.00000001 * (Math.random()-0.5)
+					dtheta[i][0] = dtheta[i][0] + 0.00000001 * (Math.random() - 0.5)
 			this.theta = this.theta.map((v, i) => v + dtheta[i][0]);  // Help with when J=0
 			this.apply_theta();
-		}
-
-		debug(arc = null, id = null) {
-
-			// this.theta = this.theta.map(x => x + 0.01);
-			// this.apply_theta();
-			// const J = this.calculate_Jacobian();
-			let dx = [[0], [-0.02], [0]];
-			if (id === 2)
-				dx = [[-0.02], [0], [0]];
-			this.move_end_effector_relative(dx);
-			// const dtheta = this.calculate_delta_theta(J, dx);
-
-			// const direction = new Array(this.dof);
-			// let norm = 0;
-			// for (let i = 0; i < direction.length; i++) {
-			//     direction[i] = dtheta[i][0];
-			//     norm += direction[i] ** 2.0;
-			// }
-			// norm = norm ** 0.5;
-			// console.log(direction);
-			// console.log(norm);
-			// this.theta = this.theta.map((v, i) => v + 0.01 * (direction[i] / norm));
-			// this.theta = this.theta.map((v, i) => v + dtheta[i][0]);
-			// this.apply_theta();
-
-			// if (arc === null)
-			//     arc = this.root;
-			//
-			// if (arc !== this.root) {
-			//     arc.articulation_matrix = arc.articulation_matrix.times(Mat4.rotation(0.02, 0, 0, 1));
-			// }
-			//
-			// const node = arc.child_node;
-			// for (const next_arc of node.children_arcs) {
-			//     this.debug(next_arc);
-			// }
 		}
 	}
 
@@ -432,4 +409,182 @@ class End_Effector {
 		this.local_position = local_position;
 		this.global_position = null;
 	}
+}
+
+export class CurveShape extends Shape {
+	constructor(spline, sample_count = 10000, curve_color = color(1, 0, 0, 1)) {
+		super("position", "normal");
+
+		this.material = {shader: new defs.Phong_Shader, ambient: 1, color: curve_color};
+		this.sample_count = sample_count;
+
+		if (spline.get_position && this.sample_count) {
+			for (let i = 0; i < this.sample_count + 1; i++) {
+				let t = i / this.sample_count;
+				this.arrays.position.push(spline.get_position(t));
+				this.arrays.normal.push(vec3(0, 0, 0));
+			}
+		}
+	}
+
+	draw(webgl_manager, uniforms) {
+		super.draw(webgl_manager, uniforms, Mat4.identity(), this.material, "LINE_STRIP");
+	}
+}
+
+export class HermiteSpline {
+	constructor() {
+		this.points = [];
+		this.tangents = [];
+		this.arc_length_table = []
+		this.size = 0;
+		this.hermite_mat = Matrix.of([1, 0, 0, 0], [0, 1, 0, 0], [-3, -2, 3, -1], [2, 1, -2, 1]);
+		// this.add_point(0, 0, 0, -1, -1, 3);
+		// this.add_point(2, 2, 2, 2, 2, 2);
+		// this.add_point(5, 5, 5, 2, 2, 2);
+	}
+
+	add_point(x, y, z, tx, ty, tz) {
+		this.points.push(vec3(x, y, z));
+		this.tangents.push(vec3(tx, ty, tz));
+		this.size++;
+		this.update_arc_length_table()
+	}
+
+	set_tangent(idx, tx, ty, tz) {
+		this.tangents[idx] = vec3(tx, ty, tz)
+		this.update_arc_length_table()
+	}
+
+	set_point(idx, x, y, z) {
+		this.points[idx] = vec3(x, y, z)
+		this.update_arc_length_table()
+	}
+
+	get_position(t) {
+		// t: [0,1]
+		if (this.size < 2) {
+			return vec3(0, t + 0.5, t ** 4)
+		}
+		let t_scaled = t * (this.size - 1)
+		let t_frac = t_scaled % 1.0
+		let A = Math.floor(t_scaled)
+		let B = Math.ceil(t_scaled)
+		let t_vec = Matrix.of([1, t_frac, t_frac ** 2, t_frac ** 3]);
+		let control_vec = Matrix.of(
+			this.points[A].copy(),
+			this.tangents[A].copy().times(1 / (this.size - 1)),  //.times(2/this.size),
+			this.points[B].copy(),
+			this.tangents[B].copy().times(1 / (this.size - 1))  //.times(2/this.size)
+		);
+		let coeff_mat = t_vec.copy().times(this.hermite_mat.copy());
+		let hermite_pos = coeff_mat.copy().times(control_vec.copy());
+		hermite_pos = vec3(hermite_pos[0][0], hermite_pos[0][1], hermite_pos[0][2])
+		return hermite_pos;
+	}
+
+	get_arc_length(sample_count = 10000) {
+		let length = 0;
+		let prev = this.get_position(0);
+		for (let i = 1; i < (sample_count + 1); i++) {
+			const t = i / sample_count;
+			const curr = this.get_position(t);
+			length += curr.minus(prev).norm();
+			prev = curr;
+		}
+		return length;
+	}
+
+	update_arc_length_table(sample_count = 1000) {
+		let length = 0;
+		this.arc_length_table = new Array(sample_count).fill(0);
+		if (this.size < 2) {
+			return this.arc_length_table
+		}
+		let prev = this.get_position(0);
+		for (let i = 1; i < (sample_count + 1); i++) {
+			const t = i / sample_count;
+			const curr = this.get_position(t);
+			length += curr.minus(prev).norm();
+			this.arc_length_table[i] = length
+			prev = curr;
+		}
+		return this.arc_length_table;
+	}
+
+	to_string() {
+		let str = ""
+		str += this.size + "\n"
+		for (let i = 0; i < this.size; i++) {
+			str += this.points[i].join(' ')
+			str += " "
+			str += this.tangents[i].join(' ')
+			str += "\n"
+		}
+		return str.trim()
+	}
+}
+
+
+export class HumanController {
+	constructor() {
+		this.human = new Articulated_Human();
+		this.moving = false;
+		this.spline = null;
+		this.t_sim = 0;
+		this.timestep = 0.001;
+		this.shapes = {
+			'box': new defs.Cube(),
+			'ball': new defs.Subdivision_Sphere(4),
+			'axis': new defs.Axis_Arrows(),
+		};
+		const phong = new defs.Phong_Shader();
+		this.materials = {};
+		this.materials.metal = {
+			shader: phong,
+			ambient: .8,
+			diffusivity: 1,
+			specularity: 1,
+			color: color(.9, .5, .9, 1)
+		}
+	}
+
+	start_move(x, y, z, vx, vy, vz) {
+		this.spline = new HermiteSpline();
+		let ef_pos = this.human.get_end_effector_position();
+		ef_pos = vec3(0, 1, 6)
+		this.spline.add_point(ef_pos[0], ef_pos[1], ef_pos[2], 0, 0, 0);
+		this.spline.add_point(ef_pos[0], 0.5, ef_pos[2], vx, vy, vz);
+		this.spline.add_point(x, y, z, vx, vy, vz);
+		this.t_sim = 0;
+		this.moving = true;
+	}
+	move(dt, caller, uniforms, animation_time=2) {
+		// console.log("AAA");
+		let spline_t = this.t_sim / animation_time;
+		if (spline_t > 1) {
+			this.t_sim = 0;
+			this.moving = false;
+			this.spline = null;
+			return
+		}
+		let spline_pos = this.spline.get_position(spline_t);
+		const t_next = this.t_sim + dt
+		const end_effector_position = this.human.get_end_effector_position();
+		let chalk_transform = Mat4.translation(spline_pos[0], spline_pos[1], spline_pos[2]).times(Mat4.scale(.1, .1, .1));
+		this.shapes.box.draw(caller, uniforms, chalk_transform, {
+			...this.materials.metal,
+			color: color(1, 0, 0, 1)
+		});
+		while (this.t_sim < t_next) {
+			let norm_t = (this.t_sim - (t_next - dt)) / dt  // [0,1]
+			let linear_interpolation = end_effector_position.times(1-norm_t).plus(spline_pos.times(norm_t));
+			this.human.move_end_effector(linear_interpolation);
+			this.t_sim += this.timestep;
+		}
+		this.human.draw(caller, uniforms);
+
+		// console.log(this.human.theta);
+	}
+
 }

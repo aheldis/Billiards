@@ -4,6 +4,7 @@ import {tiny, defs} from './examples/common.js';
 const {vec3, vec4, color, Mat4, Shape, Material, Shader, Texture, Component} = tiny;
 import {Line, PhysicsEngine, Ball} from './ball_physics.js';
 import {Table} from "./table.js";
+import {Articulated_Human} from "./human.js";
 
 export const MainBase = defs.MainBase =
 	class MainBase extends Component {
@@ -31,12 +32,14 @@ export const MainBase = defs.MainBase =
 			this.ball_radius = 0.25;
 			this.init_balls(9);
 
-			this.table_dimensions = {"x": 2.5, "y": 4}
-
+			this.table_dimensions = {"x": 4, "y": 6};
+			// BALL PHYSICS
 			this.physics = new PhysicsEngine(
 				-this.table_dimensions.x, this.table_dimensions.x, this.table_dimensions.y, -this.table_dimensions.y);
+			// TABLE
 			this.table = new Table(this.table_dimensions.x, this.table_dimensions.y);
-
+			// HUMAN
+			this.human = new Articulated_Human();
 		}
 
 		init_balls(N) {
@@ -83,7 +86,7 @@ export const MainBase = defs.MainBase =
 				// perspective() are field of view, aspect ratio, and distances to the near plane and far plane.
 
 				// !!! Camera changed here
-				Shader.assign_camera(Mat4.look_at(vec3(6, 7, 7), vec3(0, 0, 0), vec3(0, 1, 0)), this.uniforms);
+				Shader.assign_camera(Mat4.look_at(vec3(10, 11, 11), vec3(0, 0, 0), vec3(0, 1, 0)), this.uniforms);
 				//Shader.assign_camera( Mat4.look_at (vec3 (0, 0, 3), vec3 (0, 0, 0), vec3 (0, 1, 0)), this.uniforms );
 			}
 			this.uniforms.projection_transform = Mat4.perspective(Math.PI / 4, caller.width / caller.height, 1, 100);
@@ -107,8 +110,6 @@ export class Main extends MainBase {
 
 		const t = this.t = this.uniforms.animation_time / 1000;
 
-		// !!! Draw ground
-		this.table.draw(caller, this.uniforms);
 
 		let dt = this.uniforms.animation_delta_time / 1000
 		dt = Math.min(1 / 60, dt)
@@ -123,8 +124,13 @@ export class Main extends MainBase {
 			this.physics.update_velocity(this.balls, t_step)
 			this.physics.update_positions(this.balls, t_step)
 		}
-		this.draw_balls(caller)
-		this.physics.collide_balls(this.balls)
+		this.draw_balls(caller);
+		this.physics.collide_balls(this.balls);
+
+		// HUMAN
+		this.human.draw(caller, this.uniforms);
+		// TABLE
+		this.table.draw(caller, this.uniforms);
 	}
 
 	render_controls() { // render_controls(): Sets up a panel of interactive HTML elements, including

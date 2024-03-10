@@ -45,6 +45,8 @@ export const MainBase = defs.MainBase =
 			this.dvelocity = 0.1;
 
 			this.table_dimensions = {"x": 4, "y": 6};
+			this.trajectory_arrow.len_range[1] = this.table_dimensions.y;
+			
 			// BALL PHYSICS
 			this.physics = new PhysicsEngine(
 				-this.table_dimensions.x, this.table_dimensions.x, this.table_dimensions.y, -this.table_dimensions.y);

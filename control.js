@@ -14,28 +14,32 @@ export class TrajectoryArrow {
         this.tip_length = 0.2;
         this.radius = 0.1;
         this.offset = 0.2;
+        this.max_angle = Math.PI / 4;
+        this.len_range = [0.01, 6.0];
     }
 
     adjust_angle(theta) {
-        this.angle += theta;
+        if ((theta > 0 && this.angle < this.max_angle) || (theta < 0 && this.angle > -this.max_angle)) {
+            this.angle += theta;
+        }
     }
 
     adjust_length(l) {
-        if (l > 0 || this.length > 3 * this.tip_length) {
+        if ((l > 0 && this.length < this.len_range[1]) || (l < 0 && this.length > this.len_range[0])) {
             this.length += l;
         }
     }
 
     draw(webgl_manager, uniforms) {
-        let cyl_length = this.length - this.tip_length;
-        let cylinder_transform = Mat4.scale(this.radius, this.radius, cyl_length);
-        cylinder_transform.pre_multiply(Mat4.translation(this.start[0], this.start[1], -cyl_length/2 - this.offset));
+        let cyl_length = this.length;
+        let cylinder_transform = Mat4.scale(this.radius, this.radius, this.length);
+        cylinder_transform.pre_multiply(Mat4.translation(this.start[0], this.start[1], -this.length/2 - this.offset));
         cylinder_transform.pre_multiply(Mat4.rotation(this.angle, 0, 1, 0));
         cylinder_transform.pre_multiply(Mat4.translation(0, 0, this.start[2]));
         
         let cone_transform = Mat4.scale(this.radius * 2, this.radius * 2, this.tip_length);
         cone_transform.pre_multiply(Mat4.rotation(Math.PI, 0, 1, 0));
-        cone_transform.pre_multiply(Mat4.translation(0, 0, -cyl_length - this.offset));
+        cone_transform.pre_multiply(Mat4.translation(0, 0, -this.length - this.offset - this.tip_length));
         cone_transform.pre_multiply(Mat4.rotation(this.angle, 0, 1, 0));
         cone_transform.pre_multiply(Mat4.translation(this.start[0] , this.start[1], this.start[2]));
 

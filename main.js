@@ -2,7 +2,7 @@ import {tiny, defs} from './examples/common.js';
 
 // Pull these names into this module's scope for convenience:
 const {vec3, vec4, color, Mat4, Shape, Material, Shader, Texture, Component} = tiny;
-import {Line, PhysicsEngine, Ball} from './ball_physics.js';
+import {Line, PhysicsEngine, Ball, BallPhong} from './ball_physics.js';
 import {Table} from "./table.js";
 import {Articulated_Human, HumanController} from "./human.js";
 
@@ -18,15 +18,20 @@ export const MainBase = defs.MainBase =
 			};
 			const phong = new defs.Phong_Shader();
 			const tex_phong = new defs.Textured_Phong();
+			const ballshader = new BallPhong()
+
+
 			this.materials = {};
-			this.materials.metal = {
-				shader: phong,
-				ambient: .8,
-				diffusivity: 1,
-				specularity: 1,
-				color: color(.9, .5, .9, 1)
-			}
+
 			this.materials.rgb = {shader: tex_phong, ambient: .5, texture: new Texture("assets/rgb.jpg")}
+			this.materials.ballmaterial = {
+					shader: ballshader,
+					ambient: .8,
+					diffusivity: 1,
+					specularity: 1,
+					color: color(.9, .5, .9, 1)
+			}
+
 
 			this.ball_location = vec3(1, 1, 1);
 			this.ball_radius = 0.25;
@@ -59,7 +64,8 @@ export const MainBase = defs.MainBase =
 		draw_ball(ball, caller) {
 			let m = Mat4.scale(ball.radius, ball.radius, ball.radius)
 			m = Mat4.translation(ball.position[0], ball.radius + 0.01, ball.position[2]).times(m) // radius + height of the board
-			this.shapes.ball.draw(caller, this.uniforms, m, {...this.materials.metal, color: ball.color})
+			m = m.times(ball.rotation_matrix)
+			this.shapes.ball.draw(caller, this.uniforms, m, {...this.materials.ballmaterial, color: ball.color})
 			//this.shapes.ball.draw(caller, this.uniforms, m, this.materials.metal)
 		}
 
@@ -148,3 +154,4 @@ export class Main extends MainBase {
 		this.new_line();
 	}
 }
+

@@ -24,6 +24,17 @@ export const Table =
 			}
 			this.table_dim_x = table_dim_x;
 			this.table_dim_y = table_dim_y;
+
+			this.holes = [
+				[this.table_dim_x, this.table_dim_y],
+				[-this.table_dim_x, this.table_dim_y],
+				[this.table_dim_x, 0],
+				[-this.table_dim_x, 0],
+				[this.table_dim_x, -this.table_dim_y],
+				[-this.table_dim_x, -this.table_dim_y]
+			]
+			this.hole_radius = 0.5
+
 		}
 
 		draw(webgl_manager, uniforms) {

@@ -23,6 +23,9 @@ export class Line extends Shape {
 		this.arrays.position[1] = x2
 		this.copy_onto_graphics_card(webgl_manager.context)
 	}
+
+
+
 }
 
 export class Ball {
@@ -33,6 +36,7 @@ export class Ball {
 		this.acceleration = vec3(0, 0, 0)
 		this.radius = radius
 		this.rotation_matrix = Mat4.identity()
+		this.on_board = true // true after they fell in the whole
 	}
 }
 
@@ -114,6 +118,25 @@ export class PhysicsEngine {
 			}
 		}
 	}
+
+	hole_collision(balls, table) {
+		let dist2;
+
+		for (let i = 0; i < balls.length; i++) {
+			for(let j=0; j<table.holes.length; j++){
+				dist2 = (balls[i].position[0] - table.holes[j][0]) ** 2 + (balls[i].position[2] - table.holes[j][1]) ** 2
+				if (dist2 < (table.hole_radius ** 2)){
+					this.hole_collision_callback(balls[i], j)
+				}
+			}
+		}
+	}
+
+
+	hole_collision_callback(ball, holeid){
+		ball.color = color(0, 0, 0, 1)
+	}
+
 }
 
 

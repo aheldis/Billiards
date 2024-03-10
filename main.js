@@ -63,13 +63,13 @@ export const MainBase = defs.MainBase =
 
 			if (N > 0) {
 				this.balls.push(new Ball(color(1.0, 1.0, 1.0, 1.0)));
-				this.balls[0].position = vec3(0, -1, init_p + 1);
+				this.balls[0].position = vec3(0, 0, init_p + 1);
 				this.balls[0].velocity = vec3(0, 0, 0.01);
 			}
 			
 			for (let i = 1; i < N; i++) {
 				this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)))
-				this.balls[i].position = vec3(Math.random() * init_p, -1, Math.random() * init_p)
+				this.balls[i].position = vec3(Math.random() * init_p, 0, Math.random() * init_p)
 				this.balls[i].velocity = vec3(Math.random() * init_v, 0, Math.random() * init_v)
 			}
 		}
@@ -84,7 +84,10 @@ export const MainBase = defs.MainBase =
 
 		draw_balls(caller) {
 			for (let i = 0; i < this.balls.length; i++) {
-				this.draw_ball(this.balls[i], caller)
+				//if (this.balls[i].on_board){
+				if (true){
+					this.draw_ball(this.balls[i], caller)
+				}
 			}
 		}
 
@@ -148,6 +151,7 @@ export class Main extends MainBase {
 		this.trajectory_arrow.draw(caller, this.uniforms);
 		this.physics.collide_balls(this.balls);
 		this.physics.update_rotation(this.balls, dt)
+		this.physics.hole_collision(this.balls, this.table)
 
 		// HUMAN
 		if (this.human_controller.moving) {

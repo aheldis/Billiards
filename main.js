@@ -5,6 +5,7 @@ const {vec3, vec4, color, Mat4, Shape, Material, Shader, Texture, Component} = t
 import {Line, PhysicsEngine, Ball, BallPhong} from './ball_physics.js';
 import {Table} from "./table.js";
 import {Articulated_Human, HumanController} from "./human.js";
+import { TrajectoryArrow } from './control.js';
 
 export const MainBase = defs.MainBase =
 	class MainBase extends Component {
@@ -36,6 +37,12 @@ export const MainBase = defs.MainBase =
 			this.ball_location = vec3(1, 1, 1);
 			this.ball_radius = 0.25;
 			this.init_balls(9);
+			this.trajectory_arrow = new TrajectoryArrow(vec3(this.balls[0].position[0],
+															this.ball_radius,
+															this.balls[0].position[2]));
+			this.trajectory_arrow.offset += 2 * this.ball_radius;
+			this.dtheta = 0.01;
+			this.dvelocity = 0.1;
 
 			this.table_dimensions = {"x": 4, "y": 6};
 			// BALL PHYSICS
@@ -49,12 +56,18 @@ export const MainBase = defs.MainBase =
 		}
 
 		init_balls(N) {
+			// first ball will be cue ball
 			this.balls = []
 			const init_v = 6
 			const init_p = 3
 
-
-			for (let i = 0; i < N; i++) {
+			if (N > 0) {
+				this.balls.push(new Ball(color(1.0, 1.0, 1.0, 1.0)));
+				this.balls[0].position = vec3(0, -1, init_p + 1);
+				this.balls[0].velocity = vec3(0, 0, 0.01);
+			}
+			
+			for (let i = 1; i < N; i++) {
 				this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)))
 				this.balls[i].position = vec3(Math.random() * init_p, -1, Math.random() * init_p)
 				this.balls[i].velocity = vec3(Math.random() * init_v, 0, Math.random() * init_v)
@@ -132,6 +145,7 @@ export class Main extends MainBase {
 			this.physics.update_positions(this.balls, t_step)
 		}
 		this.draw_balls(caller);
+		this.trajectory_arrow.draw(caller, this.uniforms);
 		this.physics.collide_balls(this.balls);
 
 		// HUMAN
@@ -150,7 +164,16 @@ export class Main extends MainBase {
 		this.new_line();
 		// TODO: You can add your button events for debugging. (optional)
 		this.key_triggered_button("Debug", ["Shift", "D"],
-			this.human_controller.start_move(0, 0.3, 5, 0, 0, 15));
+			() => this.human_controller.start_move(0, 0.3, 5, 0, 0, 15));
+			
+		this.key_triggered_button("Aim right", ["l"],
+			() => this.trajectory_arrow.adjust_angle(-Math.PI * this.dtheta));
+		this.key_triggered_button("Aim left", ["j"],
+			() => this.trajectory_arrow.adjust_angle(Math.PI * this.dtheta));
+		this.key_triggered_button("Increase speed", ["i"],
+			() => this.trajectory_arrow.adjust_length(this.dvelocity));
+		this.key_triggered_button("Increase speed", ["k"],
+			() => this.trajectory_arrow.adjust_length(-this.dvelocity));
 		this.new_line();
 	}
 }

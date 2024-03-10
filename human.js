@@ -209,7 +209,7 @@ export const Articulated_Human =
 
 		// mapping from global theta to each joint theta
 		apply_theta() {
-			console.log(this.theta.slice(5, 7));
+			// console.log(this.theta.slice(5, 7));
 			this.theta[2] = Math.max(-0.4, Math.min(0.1, this.theta[2]));  // Limit shoulder
 			this.theta[1] = Math.max(-0.7, Math.min(-0.9, this.theta[1]));  // Limit shoulder
 			// this.theta[1] = -.9

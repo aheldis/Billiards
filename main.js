@@ -75,9 +75,9 @@ export const MainBase = defs.MainBase =
 		}
 
 		draw_ball(ball, caller) {
-			let m = Mat4.scale(ball.radius, ball.radius, ball.radius)
+			let m = ball.rotation_matrix
+			m = Mat4.scale(ball.radius, ball.radius, ball.radius).times(m)
 			m = Mat4.translation(ball.position[0], ball.radius + 0.01, ball.position[2]).times(m) // radius + height of the board
-			m = m.times(ball.rotation_matrix)
 			this.shapes.ball.draw(caller, this.uniforms, m, {...this.materials.ballmaterial, color: ball.color})
 			//this.shapes.ball.draw(caller, this.uniforms, m, this.materials.metal)
 		}
@@ -147,6 +147,7 @@ export class Main extends MainBase {
 		this.draw_balls(caller);
 		this.trajectory_arrow.draw(caller, this.uniforms);
 		this.physics.collide_balls(this.balls);
+		this.physics.update_rotation(this.balls, dt)
 
 		// HUMAN
 		if (this.human_controller.moving) {

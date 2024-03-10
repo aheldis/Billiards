@@ -64,7 +64,12 @@ export class PhysicsEngine {
 	}
 
 	update_rotation(balls, dt){
-
+		for (let i = 0; i < balls.length; i++) {
+			const v = balls[i].velocity
+			const rotdirection = vec3(0, 1, 0).cross(v)
+			const rotangle = dt * v.norm() / balls[i].radius
+			balls[i].rotation_matrix = balls[i].rotation_matrix.pre_multiply(Mat4.rotation(rotangle, rotdirection[0], rotdirection[1], rotdirection[2]))
+		}
 	}
 
 	collide_balls(balls) {

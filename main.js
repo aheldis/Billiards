@@ -204,10 +204,9 @@ export class Main extends MainBase {
 		} else {
 			if (this.current_state === this.states.body_moving) {
 				this.current_state = this.states.wait;
-				const arrow_pos_vel = this.trajectory_arrow.get_pos_vel();
+				const arrow_vel = this.trajectory_arrow.get_pos_vel().slice(3, 6);
 				this.balls[0].position = vec3(0, 0, 4);
-				this.balls[0].velocity = vec3(...arrow_pos_vel.slice(3, 6));
-				console.log("BALL", arrow_pos_vel.slice(3, 6));
+				this.balls[0].velocity = vec3(...arrow_vel.map(x => x * 2));
 			}
 		}
 		this.human_controller.draw(caller, this.uniforms);
@@ -233,7 +232,7 @@ export class Main extends MainBase {
 		this.key_triggered_button("Increase speed", ["k"],
 			() => this.trajectory_arrow.adjust_length(-this.dvelocity));
 		this.new_line();
-		this.key_triggered_button("Start", ["s"],
+		this.key_triggered_button("Start", ["m"],
 			() => {
 				this.human_controller.start_move(...this.trajectory_arrow.get_pos_vel());
 				this.current_state = this.states.body_moving;

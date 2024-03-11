@@ -237,6 +237,7 @@ export class Main extends MainBase {
 				this.human_controller.start_move(...this.trajectory_arrow.get_pos_vel());
 				this.current_state = this.states.body_moving;
 				this.balls[0].position = vec3(0, 0, 4);
+				this.balls[0].velocity = vec3(0, 0, 0.01);
 			});
 	}
 }

@@ -1,4 +1,5 @@
 import {tiny, defs} from './examples/common.js';
+import {Cue} from "./cue.js";
 
 // Pull these names into this module's scope for convenience:
 const {vec3, vec4, color, Mat4, Shape, Material, Shader, Texture, Component, Matrix} = tiny;
@@ -30,17 +31,17 @@ export const Articulated_Human =
 				color: color(184 / 255, 90 / 255, 27 / 255, 1)
 			};
 
-			const human_cfg = {
+			this.human_cfg = {
 				root_loc: [-1, 1, 7],
-				torso_scale: [1, 1.8, 0.5],
+				torso_scale: [.6, 1.8, 0.5],
 
 			};
 
 			// torso node
-			const torso_transform = Mat4.scale(...human_cfg.torso_scale);
+			const torso_transform = Mat4.scale(...this.human_cfg.torso_scale);
 			this.torso_node = new Node("torso", sphere_shape, torso_transform);
 			// root->torso
-			const root_location = Mat4.translation(...human_cfg.root_loc);
+			const root_location = Mat4.translation(...this.human_cfg.root_loc);
 			this.root = new Arc("root", null, this.torso_node, root_location);
 
 			// head node
@@ -83,19 +84,22 @@ export const Articulated_Human =
 			this.r_wrist.set_dof(true, false, true);
 
 			// CUE
-			let cue_transform = Mat4.scale(.05, .05, 4.5);
-			cue_transform.pre_multiply(Mat4.translation(0.1, 0, 1));
-			this.cue_node = new Node("cue", shapes.capped_cylinder, cue_transform);
-			// rl_arm->r_wrist->r_hand->cue
-			const cue_location = Mat4.translation(0.4, 0, 0);
-			this.cue = new Arc("cue_joint", this.r_hand_node, this.cue_node, cue_location);
-			this.r_hand_node.children_arcs.push(this.cue);
+			// let cue_transform = Mat4.scale(.05, .05, 4.5);
+			// cue_transform.pre_multiply(Mat4.translation(0.1, 0, 1));
+			// this.cue_node = new Node("cue", shapes.capped_cylinder, cue_transform);
+			// // rl_arm->r_wrist->r_hand->cue
+			// const cue_location = Mat4.translation(0.4, 0, 0);
+			// this.cue = new Arc("cue_joint", this.r_hand_node, this.cue_node, cue_location);
+			// this.r_hand_node.children_arcs.push(this.cue);
 
 
 			// add the only end-effector
-			const r_hand_end_local_pos = vec4(0, 0, 3.4, 1);
-			this.end_effector = new End_Effector("cue", this.cue, r_hand_end_local_pos);
-			this.cue.end_effector = this.end_effector;
+			// const r_hand_end_local_pos = vec4(0, 0, 3.4, 1);
+			// this.end_effector = new End_Effector("cue", this.cue, r_hand_end_local_pos);
+			// this.cue.end_effector = this.end_effector;
+			const r_hand_end_local_pos = vec4(.5, 0, 0, 1);
+			this.end_effector = new End_Effector("r_hand", this.r_hand_node, r_hand_end_local_pos);
+			this.r_wrist.end_effector = this.end_effector;
 
 
 			// LEFT
@@ -209,15 +213,18 @@ export const Articulated_Human =
 
 		// mapping from global theta to each joint theta
 		apply_theta() {
-			// console.log(this.theta.slice(5, 7));
-			this.theta[2] = Math.max(-0.4, Math.min(0.1, this.theta[2]));  // Limit shoulder
-			this.theta[1] = Math.max(-0.7, Math.min(-0.9, this.theta[1]));  // Limit shoulder
-			// this.theta[1] = -.9
-			this.theta[0] = -1
-			this.theta[3] = Math.max(-0.9, Math.min(0.9, this.theta[3]));
-			this.theta[4] = Math.max(-0.9, Math.min(2.0, this.theta[4]));
-			this.theta[3] = 0;
-			// this.theta[6] = 0;
+			// console.log(this.theta.slice(0, 3));
+			// console.log(this.theta.slice(3, 5));
+			this.theta[2] = Math.max(-1, Math.min(1, this.theta[2]));  // Limit shoulder
+			this.theta[1] = Math.max(-1.3, Math.min(1.3, this.theta[1]));  // Limit shoulder
+			this.theta[0] = Math.max(-1.2, Math.min(-0.8, this.theta[0]));  // Limit shoulder
+			// this.theta[1] = 1
+			// this.theta[0] = -1
+			// this.theta[2] = 0
+			// this.theta[3] = Math.max(-0.9, Math.min(0.9, this.theta[3]));  // Limit elbow
+			// this.theta[4] = Math.max(-0.9, Math.min(1.0, this.theta[4]));  // Limit elbow
+			// this.theta[3] = 0;
+			this.theta[6] = -.5;
 			this.r_shoulder.update_articulation(this.theta.slice(0, 3));
 			this.r_elbow.update_articulation(this.theta.slice(3, 5));
 			this.r_wrist.update_articulation(this.theta.slice(5, 7));
@@ -525,14 +532,16 @@ export class HermiteSpline {
 	}
 }
 
-
 export class HumanController {
 	constructor() {
 		this.human = new Articulated_Human();
+		this.cue = new Cue();
 		this.moving = false;
 		this.spline = null;
 		this.t_sim = 0;
-		this.timestep = 0.001;
+		this.end_pos = vec3(0, 0, 0);
+		this.end_vel = vec3(0, 0, 1);
+		this.timestep = 0.016 / 10;
 		this.shapes = {
 			'box': new defs.Cube(),
 			'ball': new defs.Subdivision_Sphere(4),
@@ -550,16 +559,31 @@ export class HumanController {
 	}
 
 	start_move(x, y, z, vx, vy, vz) {
+		this.end_pos = vec3(x, y, z);
+		this.end_vel = vec3(vx, vy, vz)
 		this.spline = new HermiteSpline();
 		let ef_pos = this.human.get_end_effector_position();
 		ef_pos = vec3(0, 1, 6)
-		this.spline.add_point(ef_pos[0], ef_pos[1], ef_pos[2], 0, 0, 0);
-		this.spline.add_point(ef_pos[0], 0.5, ef_pos[2], vx, vy, vz);
+		// this.spline.add_point(ef_pos[0], ef_pos[1], ef_pos[2], 0, 0, 0);
+		this.spline.add_point(x - vx / 6, y, z - vz / 6, 0, 0, 0);
+		this.spline.add_point(x - vx / 3, y, z - vz / 3, 0, 0, 0);
 		this.spline.add_point(x, y, z, vx, vy, vz);
 		this.t_sim = 0;
 		this.moving = true;
+
+		let root_loc = this.human.human_cfg.root_loc;
+		const vx_hat = vx / Math.sqrt(vx*vx + vz*vz);
+		if (vx_hat > 0)
+			root_loc[0] = -vx_hat * 4.5 - 1;
+		else
+			root_loc[0] = -vx_hat * 1.4 - 1;
+		this.human.root.location_matrix = Mat4.translation(...root_loc);
+		const root_angle = Math.atan(vz / vx);
+		console.log(vz, vx, root_angle);
+		this.human.root.articulation_matrix = Mat4.rotation(root_angle / 2, 0, 1, 0);
 	}
-	move(dt, caller, uniforms, animation_time=2) {
+
+	move(dt, caller, uniforms, animation_time = 1) {
 		// console.log("AAA");
 		let spline_t = this.t_sim / animation_time;
 		if (spline_t > 1) {
@@ -569,22 +593,41 @@ export class HumanController {
 			return
 		}
 		let spline_pos = this.spline.get_position(spline_t);
+		this.cue_pos = spline_pos;
+		this.cue.set_head_pos(
+			this.cue_pos[0], this.cue_pos[1], this.cue_pos[2],
+			this.end_vel[0], this.end_vel[1], this.end_vel[2]
+		);
+		const target_pos = this.cue.get_cue_grab_pos();
 		const t_next = this.t_sim + dt
 		const end_effector_position = this.human.get_end_effector_position();
-		let chalk_transform = Mat4.translation(spline_pos[0], spline_pos[1], spline_pos[2]).times(Mat4.scale(.1, .1, .1));
-		this.shapes.box.draw(caller, uniforms, chalk_transform, {
-			...this.materials.metal,
-			color: color(1, 0, 0, 1)
-		});
+		// let chalk_transform3 = Mat4.translation(end_effector_position[0], end_effector_position[1], end_effector_position[2]).times(Mat4.scale(.1, .1, .1));
+		// this.shapes.box.draw(caller, uniforms, chalk_transform3, {
+		// 	...this.materials.metal,
+		// 	color: color(0, 1, 0, 1)
+		// });
+		// let chalk_transform = Mat4.translation(spline_pos[0], spline_pos[1], spline_pos[2]).times(Mat4.scale(.1, .1, .1));
+		// this.shapes.box.draw(caller, uniforms, chalk_transform, {
+		// 	...this.materials.metal,
+		// 	color: color(1, 0, 0, 1)
+		// });
+		// let chalk_transform2 = Mat4.translation(target_pos[0], target_pos[1], target_pos[2]).times(Mat4.scale(.1, .1, .1));
+		// this.shapes.box.draw(caller, uniforms, chalk_transform2, {
+		// 	...this.materials.metal,
+		// 	color: color(1, 0, 1, 1)
+		// });
 		while (this.t_sim < t_next) {
 			let norm_t = (this.t_sim - (t_next - dt)) / dt  // [0,1]
-			let linear_interpolation = end_effector_position.times(1-norm_t).plus(spline_pos.times(norm_t));
+			let linear_interpolation = end_effector_position.times(1 - norm_t).plus(target_pos.times(norm_t));
 			this.human.move_end_effector(linear_interpolation);
 			this.t_sim += this.timestep;
 		}
-		this.human.draw(caller, uniforms);
-
 		// console.log(this.human.theta);
+	}
+
+	draw(caller, uniforms) {
+		this.human.draw(caller, uniforms);
+		this.cue.draw(caller, uniforms);
 	}
 
 }

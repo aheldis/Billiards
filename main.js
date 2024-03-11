@@ -62,6 +62,13 @@ export const MainBase = defs.MainBase =
 			this.particle_radius = 0.08;
             this.num_particles = 20; // can be changed if too computational intense in combo w ik
 			this.max_exp_speed = 10;
+
+			// STATES
+			this.states = {
+				"wait": 0,
+				"body_moving": 1,
+			}
+			this.current_state = this.states.wait;
 		}
 
 		init_balls(N) {
@@ -191,8 +198,16 @@ export class Main extends MainBase {
 		// HUMAN
 		if (this.human_controller.moving) {
 			this.human_controller.move(dt, caller, this.uniforms);
+		} else {
+			if (this.current_state === this.states.body_moving) {
+				this.current_state = this.states.wait;
+				const arrow_pos_vel = this.trajectory_arrow.get_pos_vel();
+				this.balls[0].position = vec3(0, 0, 4);
+				this.balls[0].velocity = vec3(...arrow_pos_vel.slice(3, 6));
+				console.log("BALL", arrow_pos_vel.slice(3, 6));
+			}
 		}
-		this.human_controller.human.draw(caller, this.uniforms);
+		this.human_controller.draw(caller, this.uniforms);
 		// TABLE
 		this.table.draw(caller, this.uniforms);
 	}
@@ -215,6 +230,12 @@ export class Main extends MainBase {
 		this.key_triggered_button("Increase speed", ["k"],
 			() => this.trajectory_arrow.adjust_length(-this.dvelocity));
 		this.new_line();
+		this.key_triggered_button("Start", ["s"],
+			() => {
+				this.human_controller.start_move(...this.trajectory_arrow.get_pos_vel());
+				this.current_state = this.states.body_moving;
+				this.balls[0].position = vec3(0, 0, 4);
+			});
 	}
 }
 

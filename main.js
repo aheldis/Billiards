@@ -5,8 +5,8 @@ const {vec3, vec4, color, Mat4, Shape, Material, Shader, Texture, Component} = t
 import {Line, PhysicsEngine, Ball, BallPhong} from './ball_physics.js';
 import {Table} from "./table.js";
 import {Articulated_Human, HumanController} from "./human.js";
-import { TrajectoryArrow } from './control.js';
-import { SphericalExplosion } from './ball_physics.js';
+import {TrajectoryArrow} from './control.js';
+import {SphericalExplosion} from './ball_physics.js';
 
 export const MainBase = defs.MainBase =
 	class MainBase extends Component {
@@ -27,11 +27,11 @@ export const MainBase = defs.MainBase =
 
 			this.materials.rgb = {shader: tex_phong, ambient: .5, texture: new Texture("assets/rgb.jpg")}
 			this.materials.ballmaterial = {
-					shader: ballshader,
-					ambient: .8,
-					diffusivity: 1,
-					specularity: 1,
-					color: color(.9, .5, .9, 1)
+				shader: ballshader,
+				ambient: .8,
+				diffusivity: 1,
+				specularity: 1,
+				color: color(.9, .5, .9, 1)
 			}
 
 
@@ -39,15 +39,15 @@ export const MainBase = defs.MainBase =
 			this.ball_radius = 0.25;
 			this.init_balls(9);
 			this.trajectory_arrow = new TrajectoryArrow(vec3(this.balls[0].position[0],
-															this.ball_radius,
-															this.balls[0].position[2]));
+				this.ball_radius,
+				this.balls[0].position[2]));
 			this.trajectory_arrow.offset += 2 * this.ball_radius;
 			this.dtheta = 0.01;
 			this.dvelocity = 0.1;
 
 			this.table_dimensions = {"x": 4, "y": 6};
 			this.trajectory_arrow.len_range[1] = this.table_dimensions.y;
-			
+
 			// BALL PHYSICS
 			this.physics = new PhysicsEngine(
 				-this.table_dimensions.x, this.table_dimensions.x, this.table_dimensions.y, -this.table_dimensions.y);
@@ -60,7 +60,7 @@ export const MainBase = defs.MainBase =
 			// EXPLOSION
 			this.explosions = [];	// populate as ball reach hole
 			this.particle_radius = 0.08;
-            this.num_particles = 20; // can be changed if too computational intense in combo w ik
+			this.num_particles = 20; // can be changed if too computational intense in combo w ik
 			this.max_exp_speed = 10;
 
 			// STATES
@@ -82,11 +82,11 @@ export const MainBase = defs.MainBase =
 				this.balls[0].position = vec3(0, 0, init_p + 1);
 				this.balls[0].velocity = vec3(0, 0, 0.01);
 			}
-			
+
 			for (let i = 1; i < N; i++) {
 				this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)))
-				this.balls[i].position = vec3(Math.random() * init_p, 0, Math.random() * init_p)
-				this.balls[i].velocity = vec3(Math.random() * init_v, 0, Math.random() * init_v)
+				this.balls[i].position = vec3((Math.random() - 0.5) * init_p, 0, (Math.random() - 0.5) * init_p)
+				this.balls[i].velocity = vec3((Math.random() - 0.5) * init_v, 0, (Math.random() - 0.5) * init_v)
 			}
 		}
 
@@ -101,7 +101,7 @@ export const MainBase = defs.MainBase =
 		draw_balls(caller) {
 			for (let i = 0; i < this.balls.length; i++) {
 				//if (this.balls[i].on_board){
-				if (true){
+				if (true) {
 					this.draw_ball(this.balls[i], caller)
 				}
 			}
@@ -145,7 +145,7 @@ export class Main extends MainBase {
 
 		/**********************************
 		Start coding down here!!!!
-		**********************************/
+		 **********************************/
 
 		const t = this.t = this.uniforms.animation_time / 1000;
 
@@ -170,7 +170,7 @@ export class Main extends MainBase {
 		this.trajectory_arrow.draw(caller, this.uniforms);
 		this.physics.collide_balls(this.balls);
 		this.physics.update_rotation(this.balls, dt)
-		
+
 		// Hole resolution and explosions
 		this.physics.hole_collision(this.balls, this.table)
 		for (let [i, b] of this.balls.entries()) {
@@ -187,7 +187,10 @@ export class Main extends MainBase {
 						let transform = Mat4.scale(p.radius, p.radius, p.radius);
 						transform.pre_multiply(Mat4.translation(e.center[0], e.center[1], e.center[2]));
 						transform.pre_multiply(Mat4.translation(p.position[0], p.position[1], p.position[2]));
-						this.shapes.ball.draw(caller, this.uniforms, transform, { ...this.materials.ballmaterial, color: color(1,1,1,1) });
+						this.shapes.ball.draw(caller, this.uniforms, transform, {
+							...this.materials.ballmaterial,
+							color: color(1, 1, 1, 1)
+						});
 					}
 				}
 			} else {
@@ -220,7 +223,7 @@ export class Main extends MainBase {
 		// TODO: You can add your button events for debugging. (optional)
 		this.key_triggered_button("Debug", ["Shift", "D"],
 			() => this.human_controller.start_move(0, 0.3, 5, 0, 0, 15));
-			
+
 		this.key_triggered_button("Aim right", ["l"],
 			() => this.trajectory_arrow.adjust_angle(-Math.PI * this.dtheta));
 		this.key_triggered_button("Aim left", ["j"],

@@ -1,4 +1,5 @@
 import {tiny, defs} from './examples/common.js';
+import { math } from './tiny-graphics-math.js';
 
 // Pull these names into this module's scope for convenience:
 const {vec3, vec4, color, Mat4, Shape, Material, Shader, Texture, Component, Matrix} = tiny;
@@ -135,8 +136,80 @@ export class PhysicsEngine {
 
 	hole_collision_callback(ball, holeid){
 		ball.color = color(0, 0, 0, 1)
+		ball.on_board = false;
 	}
 
+}
+
+class Particle {
+	constructor(position, radius) {
+		this.position = position;
+		this.radius = radius;
+	}
+}
+
+export class SphericalExplosion {
+	constructor(center, radius, num_particles, particle_radius, max_vel) {
+		this.center = center;
+		this.radius = radius;
+		this.particles = [];
+		this.particle_radius = particle_radius;
+		this.max_vel = max_vel;
+		this.max_dist = 2 * this.radius;
+		this.done = false;	// if explosion has completed
+
+		this.num_particles = this.init_particles(num_particles, particle_radius);
+		// console.log(this.num_particles + " particles created from the requested " + num_particles);
+	}
+
+	init_particles(num_particles, particle_radius) {
+		// Even spherical spacing alg from
+		// https://www.cmu.edu/biolphys/deserno/pdf/sphere_equi.pdf
+		let n_count = 0;
+		const a = 4 * Math.PI * Math.pow(this.radius, 2) / num_particles;
+		const d = Math.sqrt(a);
+		const M_theta = Math.round(Math.PI / d);
+		const d_theta = Math.PI / M_theta;
+		const d_phi = a / d_theta;
+		for (let m = 0; m < M_theta; m++) {
+			let theta = Math.PI * (m + 0.5) / M_theta;
+			let M_phi = Math.round(2 * Math.PI * Math.sin(theta) / d_phi);
+			for (let n = 0; n < M_phi; n++) {
+				let phi = 2 * Math.PI * n / M_phi;
+				let pos = vec3(Math.sin(theta) * Math.cos(phi), Math.sin(theta) * Math.sin(phi), Math.cos(theta));
+				pos.scale_by(this.radius);
+				this.particles.push(new Particle(pos.to4(true), particle_radius));
+				n_count++;
+			}
+		}
+		return n_count;
+	}
+
+	get_velocity(pos) {
+		let dist = pos.minus(vec4(0, 0, 0, 1));
+		if (dist >= this.max_dist) {
+			return vec4(0, 0, 0, 0);
+		}
+		let period = 2 * this.max_dist;
+		let speed = this.max_vel * Math.sin((dist.norm() * 2 * Math.PI / period) + (0.5 * period));
+		return dist.times(speed);
+	}
+
+	update_position(dt) {
+		let threshold = 0.0001;
+		for (let p of this.particles) {
+			let v = this.get_velocity(p.position);
+			if (v.norm() < threshold) {
+				this.done = true;
+			}
+			else {
+				// reduce size as explosion occurs
+				p.position = p.position.plus(v.times(dt));
+				let a = 1 - (p.position.norm() / this.max_dist);
+				p.radius = a * this.particle_radius;
+			}
+		}
+	}
 }
 
 

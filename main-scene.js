@@ -33,6 +33,7 @@ import {Part_two_spring} from "./part_two_spring.js";
 import {Part_three_chain} from "./part_three_chain.js";
 
 import {Main} from "./main.js";
+import { Explosion } from './explosion_scene.js';
 
 Object.assign (defs,
     {Minimal_Webgl_Demo},
@@ -47,12 +48,13 @@ Object.assign (defs,
     {Transforms_Sandbox_Base, Transforms_Sandbox},
     {Main},
     {Part_two_spring},
-    {Part_three_chain}
+    {Part_three_chain},
+    {Explosion}
 );
 
 // ******************** SELECT THE DEMO TO DISPLAY:
 
-let scenes = {1: Main, 2: Part_two_spring, 3: Part_three_chain};
+let scenes = {1: Main, 2: Explosion, 3: Part_three_chain};
 const scene_selector = (i) => scenes[i];
 
 const main_scene        = Main; // default

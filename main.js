@@ -6,6 +6,7 @@ import {Line, PhysicsEngine, Ball, BallPhong} from './ball_physics.js';
 import {Table} from "./table.js";
 import {Articulated_Human, HumanController} from "./human.js";
 import { TrajectoryArrow } from './control.js';
+import { SphericalExplosion } from './ball_physics.js';
 
 export const MainBase = defs.MainBase =
 	class MainBase extends Component {
@@ -55,6 +56,12 @@ export const MainBase = defs.MainBase =
 			// HUMAN
 			this.human_controller = new HumanController();
 			// this.human = new Articulated_Human();
+
+			// EXPLOSION
+			this.explosions = [];	// populate as ball reach hole
+			this.particle_radius = 0.08;
+            this.num_particles = 20; // can be changed if too computational intense in combo w ik
+			this.max_exp_speed = 10;
 		}
 
 		init_balls(N) {
@@ -148,12 +155,38 @@ export class Main extends MainBase {
 			this.physics.apply_friction(this.balls)
 			this.physics.update_velocity(this.balls, t_step)
 			this.physics.update_positions(this.balls, t_step)
+			for (let e of this.explosions) {
+				e.update_position(t_step);
+			}
 		}
 		this.draw_balls(caller);
 		this.trajectory_arrow.draw(caller, this.uniforms);
 		this.physics.collide_balls(this.balls);
 		this.physics.update_rotation(this.balls, dt)
+		
+		// Hole resolution and explosions
 		this.physics.hole_collision(this.balls, this.table)
+		for (let [i, b] of this.balls.entries()) {
+			if (!b.on_board) {
+				this.explosions.push(new SphericalExplosion(b.position.to4(true), this.ball_radius, this.num_particles, this.particle_radius, this.max_exp_speed));
+				this.balls.splice(i, 1);
+			}
+		}
+		for (let [i, e] of this.explosions.entries()) {
+			if (!e.done) {
+				for (const p of e.particles) {
+					// only display particle above table -- can change!
+					if (p.position[1] - this.particle_radius > 0.01) {
+						let transform = Mat4.scale(p.radius, p.radius, p.radius);
+						transform.pre_multiply(Mat4.translation(e.center[0], e.center[1], e.center[2]));
+						transform.pre_multiply(Mat4.translation(p.position[0], p.position[1], p.position[2]));
+						this.shapes.ball.draw(caller, this.uniforms, transform, { ...this.materials.ballmaterial, color: color(1,1,1,1) });
+					}
+				}
+			} else {
+				this.explosions.splice(i, 1);
+			}
+		}
 
 		// HUMAN
 		if (this.human_controller.moving) {

@@ -580,7 +580,7 @@ export class HumanController {
 		} else {
 			root_loc[0] = -vx_hat * 1.5 - 1;
 		}
-		console.log(vz, vx, root_angle);
+		// console.log(vz, vx, root_angle);
 		this.human.root.location_matrix = Mat4.translation(...root_loc);
 		this.human.root.articulation_matrix = Mat4.rotation(root_angle / 2, 0, 1, 0);
 	}

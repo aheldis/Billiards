@@ -7,6 +7,7 @@ import {Table} from "./table.js";
 import {Articulated_Human, HumanController} from "./human.js";
 import {TrajectoryArrow} from './control.js';
 import {SphericalExplosion} from './ball_physics.js';
+import {BALL_COLORS} from "./configs.js";
 
 export const MainBase = defs.MainBase =
 	class MainBase extends Component {
@@ -37,7 +38,7 @@ export const MainBase = defs.MainBase =
 
 			this.ball_location = vec3(1, 1, 1);
 			this.ball_radius = 0.25;
-			this.init_balls(9);
+			this.init_balls(16);
 			this.trajectory_arrow = new TrajectoryArrow(vec3(this.balls[0].position[0],
 				this.ball_radius,
 				this.balls[0].position[2]));
@@ -83,10 +84,13 @@ export const MainBase = defs.MainBase =
 				this.balls[0].velocity = vec3(0, 0, 0.01);
 			}
 
+			const color_names = Object.keys(BALL_COLORS)
 			for (let i = 1; i < N; i++) {
-				this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)))
-				this.balls[i].position = vec3((Math.random() - 0.5) * init_p, 0, (Math.random() - 0.5) * init_p)
-				this.balls[i].velocity = vec3((Math.random() - 0.5) * init_v, 0, (Math.random() - 0.5) * init_v)
+				const curr_color = BALL_COLORS[color_names[i % color_names.length]];
+				this.balls.push(new Ball(color(...curr_color, 1.0)));
+				// this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)));
+				this.balls[i].position = vec3((Math.random() - 0.5) * init_p, 0, (Math.random() - 0.5) * init_p);
+				this.balls[i].velocity = vec3((Math.random() - 0.5) * init_v, 0, (Math.random() - 0.5) * init_v);
 			}
 		}
 

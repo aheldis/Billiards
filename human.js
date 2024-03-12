@@ -572,14 +572,16 @@ export class HumanController {
 		this.moving = true;
 
 		let root_loc = this.human.human_cfg.root_loc;
-		const vx_hat = vx / Math.sqrt(vx*vx + vz*vz);
-		if (vx_hat > 0)
+		let root_angle = Math.atan(vx / vz);
+		const vx_hat = vx / Math.sqrt(vx * vx + vz * vz);
+		if (vx_hat > 0) {
 			root_loc[0] = -vx_hat * 4.5 - 1;
-		else
-			root_loc[0] = -vx_hat * 1.4 - 1;
+			root_angle = Math.atan(vz / vx);
+		} else {
+			root_loc[0] = -vx_hat * 1.5 - 1;
+		}
+		console.log(vz, vx, root_angle);
 		this.human.root.location_matrix = Mat4.translation(...root_loc);
-		const root_angle = Math.atan(vz / vx);
-		// console.log(vz, vx, root_angle);
 		this.human.root.articulation_matrix = Mat4.rotation(root_angle / 2, 0, 1, 0);
 	}
 

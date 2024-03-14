@@ -126,7 +126,7 @@ export class PhysicsEngine {
 		for (let i = 0; i < balls.length; i++) {
 			for(let j=0; j<table.holes.length; j++){
 				dist2 = (balls[i].position[0] - table.holes[j][0]) ** 2 + (balls[i].position[2] - table.holes[j][1]) ** 2
-				if (dist2 < (table.hole_radius ** 2)){
+				if (dist2 < (table.hole_radius ** 2) - 0.07){
 					this.hole_collision_callback(balls[i], j)
 				}
 			}

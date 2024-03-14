@@ -12,7 +12,6 @@ export const Table =
 				'box': new defs.Cube(),
 				'ball': new defs.Subdivision_Sphere(4),
 				'axis': new defs.Axis_Arrows(),
-				'cylander': new defs.Rounded_Capped_Cylinder()
 				// 'line': new Line()
 			};
 			this.materials = {};
@@ -41,14 +40,14 @@ export const Table =
 			this.table_dim_y = table_dim_y;
 
 			this.holes = [
-				[this.table_dim_x, this.table_dim_y],
-				[-this.table_dim_x, this.table_dim_y],
-				[this.table_dim_x, 0],
-				[-this.table_dim_x, 0],
-				[this.table_dim_x, -this.table_dim_y],
-				[-this.table_dim_x, -this.table_dim_y]
+				[this.table_dim_x-0.2, this.table_dim_y-0.2],
+				[-(this.table_dim_x-0.2), this.table_dim_y-0.2],
+				[this.table_dim_x-0.1, 0],
+				[-(this.table_dim_x-0.1), 0],
+				[this.table_dim_x-0.2, -(this.table_dim_y-0.2)],
+				[-(this.table_dim_x-0.2), -(this.table_dim_y-0.2)]
 			]
-			this.hole_radius = 0.5
+			this.hole_radius = 0.4
 
 		}
 
@@ -57,13 +56,21 @@ export const Table =
 			let floor_transform = Mat4.translation(0, 0, 0).times(Mat4.scale(this.table_dim_x, 0.01, this.table_dim_y));
 			this.shapes.box.draw(webgl_manager, uniforms, floor_transform, this.materials.board);
 
-			let wall1 = Mat4.translation(-this.table_dim_x - 0.1, 0.1, 0).times(Mat4.scale(0.1, 0.1, this.table_dim_y + 0.2));
+			for (const hole of this.holes) {
+				// let hole = Mat4.translation(this.table_dim_x-0.1, 0, this.table_dim_y-0.1).times(Mat4.scale(this.hole_radius, 0.05, this.hole_radius));
+				// this.shapes.ball.draw(webgl_manager, uniforms, hole, this.materials.hole);
+
+				let hole_transform = Mat4.translation(hole[0], 0, hole[1]).times(Mat4.scale(this.hole_radius, 0.05, this.hole_radius));
+				this.shapes.ball.draw(webgl_manager, uniforms, hole_transform, this.materials.hole);
+			}
+
+			let wall1 = Mat4.translation(-this.table_dim_x - 0.1, 0, 0).times(Mat4.scale(0.2, 0.15, this.table_dim_y + 0.3));
 			this.shapes.box.draw(webgl_manager, uniforms, wall1, this.materials.wood);
-			let wall2 = Mat4.translation(this.table_dim_x + 0.1, 0.1, 0).times(Mat4.scale(0.1, 0.1, this.table_dim_y + 0.2));
+			let wall2 = Mat4.translation(this.table_dim_x + 0.1, 0, 0).times(Mat4.scale(0.2, 0.15, this.table_dim_y + 0.3));
 			this.shapes.box.draw(webgl_manager, uniforms, wall2, this.materials.wood);
-			let wall3 = Mat4.translation(0, 0.1, this.table_dim_y + 0.1).times(Mat4.scale(this.table_dim_x + 0.2, 0.1, 0.1));
+			let wall3 = Mat4.translation(0, 0, this.table_dim_y + 0.1).times(Mat4.scale(this.table_dim_x + 0.3, 0.15, 0.2));
 			this.shapes.box.draw(webgl_manager, uniforms, wall3, this.materials.wood);
-			let wall4 = Mat4.translation(0, 0.1, -this.table_dim_y - 0.1).times(Mat4.scale(this.table_dim_x + 0.2, 0.1, 0.1));
+			let wall4 = Mat4.translation(0, 0, -this.table_dim_y - 0.1).times(Mat4.scale(this.table_dim_x + 0.3, 0.15, 0.2));
 			this.shapes.box.draw(webgl_manager, uniforms, wall4, this.materials.wood);
 
 			let below = Mat4.translation(0, -0.2, 0).times(Mat4.scale(this.table_dim_x + 0.2, 0.2, this.table_dim_y + 0.2));
@@ -84,13 +91,6 @@ export const Table =
 			this.shapes.box.draw(webgl_manager, uniforms, connector2, this.materials.wood);
 			let connector3 = Mat4.translation(0, -2.5, 0).times(Mat4.scale(0.3, 0.1, this.table_dim_y - 1));
 			this.shapes.box.draw(webgl_manager, uniforms, connector3, this.materials.wood);
-
-			// for (const hole of this.holes) {
-			// 	let leg1 = Mat4.translation(hole[0], -1.5, hole[1]).times(Mat4.scale(0.5, 1.5, 0.5));
-			// 	this.shapes.box.draw(webgl_manager, uniforms, leg1, this.materials.wood);
-			// }
-			// let hole = Mat4.translation(this.table_dim_x - 1, -1.5, this.table_dim_y - 1).times(Mat4.scale(0.5, 1.5, 0.5));
-
 
 		}
 	}

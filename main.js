@@ -94,8 +94,8 @@ export const MainBase = defs.MainBase =
 					const curr_color = BALL_COLORS[color_names[ball_idx % color_names.length]];
 					this.balls.push(new Ball(color(...curr_color, 1.0)));
 					// this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)));
-					this.balls[ball_idx].position = vec3(x + j + Math.random() * 0.1, 0, z - dist * i + Math.random() * 0.1);
-					this.balls[ball_idx].velocity = vec3(0, 0, 0.01);
+					this.balls[ball_idx].position = vec3(x + j + Math.random() * 0.05, 0, z - dist * i + Math.random() * 0.1);
+					this.balls[ball_idx].velocity = vec3(0.01, 0, 0.01);
 					console.log(ball_idx, j, 0, dist * i);
 					ball_idx += 1;
 				}
@@ -248,6 +248,7 @@ export class Main extends MainBase {
 			() => {
 				this.human_controller.start_move(...this.trajectory_arrow.get_pos_vel());
 				this.current_state = this.states.body_moving;
+				this.balls[0].color = color(1, 1, 1, 1);
 				this.balls[0].position = vec3(0, 0, 4);
 				this.balls[0].velocity = vec3(0, 0, 0.01);
 			});

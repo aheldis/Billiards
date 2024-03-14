@@ -84,13 +84,21 @@ export const MainBase = defs.MainBase =
 				this.balls[0].velocity = vec3(0, 0, 0.01);
 			}
 
-			const color_names = Object.keys(BALL_COLORS)
-			for (let i = 1; i < N; i++) {
-				const curr_color = BALL_COLORS[color_names[i % color_names.length]];
-				this.balls.push(new Ball(color(...curr_color, 1.0)));
-				// this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)));
-				this.balls[i].position = vec3((Math.random() - 0.5) * init_p, 0, (Math.random() - 0.5) * init_p);
-				this.balls[i].velocity = vec3((Math.random() - 0.5) * init_v, 0, (Math.random() - 0.5) * init_v);
+			const color_names = Object.keys(BALL_COLORS);
+			let x = 0;
+			let z = init_p - 2.5;
+			let dist = 0.3;
+			let ball_idx = 1;
+			for (let i = 0; i < 5; i++) {
+				for (let j = -dist * i; j <= dist * i + 0.1; j += dist * 2) {
+					const curr_color = BALL_COLORS[color_names[ball_idx % color_names.length]];
+					this.balls.push(new Ball(color(...curr_color, 1.0)));
+					// this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)));
+					this.balls[ball_idx].position = vec3(x + j + Math.random() * 0.1, 0, z - dist * i + Math.random() * 0.1);
+					this.balls[ball_idx].velocity = vec3(0, 0, 0.01);
+					console.log(ball_idx, j, 0, dist * i);
+					ball_idx += 1;
+				}
 			}
 		}
 
@@ -233,7 +241,7 @@ export class Main extends MainBase {
 			() => this.trajectory_arrow.adjust_angle(Math.PI * this.dtheta));
 		this.key_triggered_button("Increase speed", ["i"],
 			() => this.trajectory_arrow.adjust_length(this.dvelocity));
-		this.key_triggered_button("Increase speed", ["k"],
+		this.key_triggered_button("Decrease speed", ["k"],
 			() => this.trajectory_arrow.adjust_length(-this.dvelocity));
 		this.new_line();
 		this.key_triggered_button("Start", ["m"],

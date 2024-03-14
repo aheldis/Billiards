@@ -63,6 +63,7 @@ export const MainBase = defs.MainBase =
 			this.particle_radius = 0.08;
 			this.num_particles = 20; // can be changed if too computational intense in combo w ik
 			this.max_exp_speed = 10;
+			this.balls_in_holes = []; // to make resetting easier
 
 			// STATES
 			this.states = {
@@ -189,6 +190,9 @@ export class Main extends MainBase {
 			if (!b.on_board) {
 				this.explosions.push(new SphericalExplosion(b.position.to4(true), this.ball_radius, this.num_particles, this.particle_radius, this.max_exp_speed));
 				this.balls.splice(i, 1);
+				if (!i == 0) {
+					this.balls_in_holes.push(b);
+				}
 			}
 		}
 		for (let [i, e] of this.explosions.entries()) {

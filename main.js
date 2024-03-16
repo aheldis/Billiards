@@ -212,7 +212,7 @@ export class Main extends MainBase {
 		this.physics.hole_collision(this.balls, this.table)
 		for (let [i, b] of this.balls.entries()) {
 			if ((!this.reset_balls) && (!b.on_board) && (this.balls[i].visible)) {
-				console.log("here");
+				// console.log("here");
 				let explosion = new SphericalExplosion(b.position.to4(true), this.ball_radius,
 					this.num_particles, this.particle_radius, this.max_exp_speed)
 				explosion.ball = i;
@@ -264,7 +264,7 @@ export class Main extends MainBase {
 				dif += this.balls[i].position.minus(this.initial_positions[i]).norm();
 			}
 			this.spline_t += t_sim / 1000;
-			if (dif < 0.1) {
+			if (dif < 0.2) {
 				this.spline_t = 0;
 				this.splines = [];
 				this.reset_balls = false;

@@ -8,6 +8,7 @@ import {Articulated_Human, HumanController} from "./human.js";
 import {TrajectoryArrow} from './control.js';
 import {SphericalExplosion} from './ball_physics.js';
 import {BALL_COLORS} from "./configs.js";
+import { Texture_Cube, Skybox_Shader, Background } from './skybox.js';
 
 export const MainBase = defs.MainBase =
 	class MainBase extends Component {
@@ -21,11 +22,18 @@ export const MainBase = defs.MainBase =
 			};
 			const phong = new defs.Phong_Shader();
 			const tex_phong = new defs.Textured_Phong();
-			const ballshader = new BallPhong()
-
+			const ballshader = new BallPhong();
+			const skybox_faces = [
+				"assets/sky_right.png",
+				"assets/sky_left.png",
+				"assets/sky_top.png",
+				"assets/sky_bottom.png",
+				"assets/sky_front.png",
+				"assets/sky_back.png"
+			]
 
 			this.materials = {};
-
+			this.background = new Background("sky", this.shapes.box);
 			this.materials.rgb = {shader: tex_phong, ambient: .5, texture: new Texture("assets/rgb.jpg")}
 			this.materials.ballmaterial = {
 				shader: ballshader,
@@ -34,7 +42,13 @@ export const MainBase = defs.MainBase =
 				specularity: 1,
 				color: color(.9, .5, .9, 1)
 			}
-
+			this.materials.ground_material = {
+				shader: phong,
+				ambient: .8,
+				diffusivity: 1,
+				specularity: 0.1,
+				color: color(.2, .1, .7, 1)
+			}
 
 			this.ball_location = vec3(1, 1, 1);
 			this.ball_radius = 0.25;
@@ -162,6 +176,8 @@ export class Main extends MainBase {
 
 		const t = this.t = this.uniforms.animation_time / 1000;
 
+		this.background.draw_sky(caller, this.uniforms, Mat4.scale(10, 10, 10), this.materials.skybox);
+		this.background.draw_ground(caller, this.uniforms, this.shapes.box, this.materials.ground_material);
 
 		let dt = this.uniforms.animation_delta_time / 1000
 		dt = Math.min(1 / 60, dt)

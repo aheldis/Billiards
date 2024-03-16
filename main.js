@@ -99,7 +99,7 @@ export const MainBase = defs.MainBase =
 			this.initial_positions = [];
 
 			if (N > 0) {
-				this.balls.push(new Ball(color(1.0, 1.0, 1.0, 1.0), true));
+				this.balls.push(new Ball(color(1.0, 1.0, 1.0, 1.0), 0, true));
 				this.balls[0].position = vec3(0, 0, init_p + 1);
 				this.balls[0].velocity = vec3(0, 0, 0.01);
 				this.initial_positions.push(this.balls[0].position);
@@ -114,7 +114,7 @@ export const MainBase = defs.MainBase =
 			for (let i = 0; i < 5; i++) {
 				for (let j = -dist * i; j <= dist * i + 0.1; j += dist * 2) {
 					const curr_color = BALL_COLORS[color_names[ball_idx % color_names.length]];
-					this.balls.push(new Ball(color(...curr_color, 1.0)));
+					this.balls.push(new Ball(color(...curr_color, 1.0), ball_idx));
 					// this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)));
 					this.balls[ball_idx].position = vec3(x + j + (Math.random() - 0.5) * 0.1, 0, z - dist * i + Math.random() * 0.1);
 					this.initial_positions.push(this.balls[ball_idx].position);
@@ -320,7 +320,7 @@ export class Main extends MainBase {
 					this.splines.push(new Spline());
 					let spline = this.splines[i];
 					spline.add_point(this.balls[i].position.copy());
-					let init_pos = this.initial_positions[i];
+					let init_pos = this.initial_positions[this.balls[i].index];
 					spline.add_point(init_pos.copy());
 					this.spline_t = 0;
 					if (!this.balls[i].visible) {

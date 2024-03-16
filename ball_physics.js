@@ -30,7 +30,7 @@ export class Line extends Shape {
 }
 
 export class Ball {
-	constructor(ball_color, is_white=false, radius = 0.2) {
+	constructor(ball_color, index, is_white=false, radius = 0.2) {
 		this.color = ball_color;
 		this.position = vec3(0, 0, 0);
 		this.velocity = vec3(0, 0, 0);
@@ -40,6 +40,7 @@ export class Ball {
 		this.on_board = true; // true after they fell in the whole
 		this.visible = true;
 		this.is_white = is_white;
+		this.index = index;
 	}
 }
 

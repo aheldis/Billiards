@@ -17,7 +17,7 @@ export class TrajectoryArrow {
 		this.radius = 0.1;
 		this.offset = 0.2;
 		this.max_angle = Math.PI / 4;
-		this.len_range = [0.01, 6.0];
+		this.len_range = [0.5, 5.5];
 	}
 
 	get_pos_vel() {

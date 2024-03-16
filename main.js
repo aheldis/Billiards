@@ -99,7 +99,7 @@ export const MainBase = defs.MainBase =
 			this.initial_positions = [];
 
 			if (N > 0) {
-				this.balls.push(new Ball(color(1.0, 1.0, 1.0, 1.0)));
+				this.balls.push(new Ball(color(1.0, 1.0, 1.0, 1.0), true));
 				this.balls[0].position = vec3(0, 0, init_p + 1);
 				this.balls[0].velocity = vec3(0, 0, 0.01);
 				this.initial_positions.push(this.balls[0].position);

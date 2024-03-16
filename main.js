@@ -78,7 +78,7 @@ export const MainBase = defs.MainBase =
 			this.particle_radius = 0.08;
 			this.num_particles = 20; // can be changed if too computational intense in combo w ik
 			this.max_exp_speed = 10;
-			// this.balls_in_holes = []; // to make resetting easier
+			this.balls_in_holes = []; // to make resetting easier
 
 			// STATES
 			this.states = {
@@ -184,7 +184,7 @@ export class Main extends MainBase {
 
 		const t = this.t = this.uniforms.animation_time / 1000;
 
-		this.background.draw_sky(caller, this.uniforms, Mat4.scale(10, 10, 10), this.materials.skybox);
+		this.background.draw_sky(caller, this.uniforms);
 		this.background.draw_ground(caller, this.uniforms, this.shapes.box, this.materials.ground_material);
 
 		let dt = this.uniforms.animation_delta_time / 1000
@@ -212,12 +212,14 @@ export class Main extends MainBase {
 		this.physics.hole_collision(this.balls, this.table)
 		for (let [i, b] of this.balls.entries()) {
 			if ((!this.reset_balls) && (!b.on_board) && (this.balls[i].visible)) {
-				// console.log("here");
 				let explosion = new SphericalExplosion(b.position.to4(true), this.ball_radius,
 					this.num_particles, this.particle_radius, this.max_exp_speed)
 				explosion.ball = i;
 				this.explosions.push(explosion)
-				this.balls[i].visible = false;
+				this.balls.splice(i, 1);
+				if (!i == 0) {
+					this.balls_in_holes.push(b);
+				}
 			}
 		}
 		for (let [i, e] of this.explosions.entries()) {
@@ -235,8 +237,6 @@ export class Main extends MainBase {
 					}
 				}
 			} else {
-				this.balls[e.ball].velocity = vec3(0, 0, 0.01);
-				this.balls[e.ball].position[1] -= 4;
 				this.explosions.splice(i, 1);
 			}
 		}
@@ -269,8 +269,10 @@ export class Main extends MainBase {
 				this.spline_t = 0;
 				this.splines = [];
 				this.reset_balls = false;
-				for (let i = 0; i < this.balls.length; i++)
+				for (let i = 0; i < this.balls.length; i++) {
 					this.balls[i].on_board = true;
+				}
+				console.log(this.balls)
 			}
 		}
 	}
@@ -307,6 +309,11 @@ export class Main extends MainBase {
 			() => {
 				console.log(this.balls[0]);
 				this.reset_balls = true;
+				this.balls.push(...this.balls_in_holes);
+				for (let b of this.balls) {
+					b.velocity = vec3(0, 0, 0.01);
+				}
+				this.balls_in_holes = [];
 				this.splines = [];
 				for (let i = 0; i < this.balls.length; i++) {
 					this.splines.push(new Spline());
@@ -317,8 +324,6 @@ export class Main extends MainBase {
 					this.spline_t = 0;
 					if (!this.balls[i].visible) {
 						this.balls[i].visible = true;
-						this.balls[i].position[1] += 4;
-						this.balls[i].velocity = vec3(0, 0, 0.01);
 					}
 				}
 

@@ -89,7 +89,6 @@ export class PhysicsEngine {
 						// Meaning the collision has already been detected and hence we can skip
 						continue
 					}
-
 					// Following https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional
 					const d_position_unitvector = d_position.normalized()
 					const v1_normal = d_position_unitvector.times(d_position_unitvector.dot(balls[i].velocity))

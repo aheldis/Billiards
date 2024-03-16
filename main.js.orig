@@ -8,8 +8,12 @@ import {Articulated_Human, HumanController} from "./human.js";
 import {TrajectoryArrow} from './control.js';
 import {SphericalExplosion} from './ball_physics.js';
 import {BALL_COLORS} from "./configs.js";
+<<<<<<< HEAD
 import {Spline} from "./ball_spline.js";
+
+=======
 import { Texture_Cube, Skybox_Shader, Background } from './skybox.js';
+>>>>>>> 4b4bfc358c741987fb6bd46cf792ed2108f4a5d9
 
 export const MainBase = defs.MainBase =
 	class MainBase extends Component {

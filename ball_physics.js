@@ -31,13 +31,14 @@ export class Line extends Shape {
 
 export class Ball {
 	constructor(ball_color, radius = 0.2) {
-		this.color = ball_color
-		this.position = vec3(0, 0, 0)
-		this.velocity = vec3(0, 0, 0)
-		this.acceleration = vec3(0, 0, 0)
-		this.radius = radius
-		this.rotation_matrix = Mat4.identity()
-		this.on_board = true // true after they fell in the whole
+		this.color = ball_color;
+		this.position = vec3(0, 0, 0);
+		this.velocity = vec3(0, 0, 0);
+		this.acceleration = vec3(0, 0, 0);
+		this.radius = radius;
+		this.rotation_matrix = Mat4.identity();
+		this.on_board = true; // true after they fell in the whole
+		this.visible = true;
 	}
 }
 
@@ -64,7 +65,8 @@ export class PhysicsEngine {
 
 	update_positions(balls, dt) {
 		for (let i = 0; i < balls.length; i++) {
-			balls[i].position = balls[i].position.plus(balls[i].velocity.times(dt))
+			if (balls[i].on_board)
+				balls[i].position = balls[i].position.plus(balls[i].velocity.times(dt))
 		}
 	}
 
@@ -107,6 +109,8 @@ export class PhysicsEngine {
 
 	collide_walls(balls){
 		for (let i = 0; i < balls.length; i++) {
+			if (!balls[i].visible)
+				continue;
 			if (balls[i].position[0] - balls[i].radius < this.left) {
 				balls[i].velocity[0] = Math.abs(balls[i].velocity[0])
 			} else if (balls[i].position[0] + balls[i].radius > this.right) {
@@ -124,7 +128,9 @@ export class PhysicsEngine {
 		let dist2;
 
 		for (let i = 0; i < balls.length; i++) {
-			for(let j=0; j<table.holes.length; j++){
+			if (!balls[i].visible)
+				continue;
+			for(let j= 0; j < table.holes.length; j++){
 				dist2 = (balls[i].position[0] - table.holes[j][0]) ** 2 + (balls[i].position[2] - table.holes[j][1]) ** 2
 				if (dist2 < (table.hole_radius ** 2) - 0.05){
 					this.hole_collision_callback(balls[i], j)
@@ -135,7 +141,6 @@ export class PhysicsEngine {
 
 
 	hole_collision_callback(ball, holeid){
-		ball.color = color(0, 0, 0, 1)
 		ball.on_board = false;
 	}
 
@@ -157,6 +162,7 @@ export class SphericalExplosion {
 		this.max_vel = max_vel;
 		this.max_dist = 2 * this.radius;
 		this.done = false;	// if explosion has completed
+		this.ball = -1;
 
 		this.num_particles = this.init_particles(num_particles, particle_radius);
 		// console.log(this.num_particles + " particles created from the requested " + num_particles);

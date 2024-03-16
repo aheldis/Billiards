@@ -8,6 +8,8 @@ import {Articulated_Human, HumanController} from "./human.js";
 import {TrajectoryArrow} from './control.js';
 import {SphericalExplosion} from './ball_physics.js';
 import {BALL_COLORS} from "./configs.js";
+import {Spline} from "./ball_spline.js";
+
 
 export const MainBase = defs.MainBase =
 	class MainBase extends Component {
@@ -63,7 +65,7 @@ export const MainBase = defs.MainBase =
 			this.particle_radius = 0.08;
 			this.num_particles = 20; // can be changed if too computational intense in combo w ik
 			this.max_exp_speed = 10;
-			this.balls_in_holes = []; // to make resetting easier
+			// this.balls_in_holes = []; // to make resetting easier
 
 			// STATES
 			this.states = {
@@ -71,6 +73,9 @@ export const MainBase = defs.MainBase =
 				"body_moving": 1,
 			}
 			this.current_state = this.states.wait;
+			this.splines = [];
+			this.reset_balls = false;
+			this.spline_t = 0
 		}
 
 		init_balls(N) {
@@ -78,11 +83,13 @@ export const MainBase = defs.MainBase =
 			this.balls = []
 			const init_v = 6
 			const init_p = 3
+			this.initial_positions = [];
 
 			if (N > 0) {
 				this.balls.push(new Ball(color(1.0, 1.0, 1.0, 1.0)));
 				this.balls[0].position = vec3(0, 0, init_p + 1);
 				this.balls[0].velocity = vec3(0, 0, 0.01);
+				this.initial_positions.push(this.balls[0].position);
 			}
 
 			const color_names = Object.keys(BALL_COLORS);
@@ -90,14 +97,16 @@ export const MainBase = defs.MainBase =
 			let z = init_p - 2.5;
 			let dist = 0.3;
 			let ball_idx = 1;
+
 			for (let i = 0; i < 5; i++) {
 				for (let j = -dist * i; j <= dist * i + 0.1; j += dist * 2) {
 					const curr_color = BALL_COLORS[color_names[ball_idx % color_names.length]];
 					this.balls.push(new Ball(color(...curr_color, 1.0)));
 					// this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)));
 					this.balls[ball_idx].position = vec3(x + j + (Math.random() - 0.5) * 0.1, 0, z - dist * i + Math.random() * 0.1);
+					this.initial_positions.push(this.balls[ball_idx].position);
 					this.balls[ball_idx].velocity = vec3(0.01, 0, 0.01);
-					console.log(ball_idx, j, 0, dist * i);
+					this.balls[ball_idx].visible = true;
 					ball_idx += 1;
 				}
 			}
@@ -114,7 +123,7 @@ export const MainBase = defs.MainBase =
 		draw_balls(caller) {
 			for (let i = 0; i < this.balls.length; i++) {
 				//if (this.balls[i].on_board){
-				if (true) {
+				if (this.balls[i].visible) {
 					this.draw_ball(this.balls[i], caller)
 				}
 			}
@@ -187,12 +196,13 @@ export class Main extends MainBase {
 		// Hole resolution and explosions
 		this.physics.hole_collision(this.balls, this.table)
 		for (let [i, b] of this.balls.entries()) {
-			if (!b.on_board) {
-				this.explosions.push(new SphericalExplosion(b.position.to4(true), this.ball_radius, this.num_particles, this.particle_radius, this.max_exp_speed));
-				this.balls.splice(i, 1);
-				if (!i == 0) {
-					this.balls_in_holes.push(b);
-				}
+			if ((!this.reset_balls) && (!b.on_board) && (this.balls[i].visible)) {
+				console.log("here");
+				let explosion = new SphericalExplosion(b.position.to4(true), this.ball_radius,
+					this.num_particles, this.particle_radius, this.max_exp_speed)
+				explosion.ball = i;
+				this.explosions.push(explosion)
+				this.balls[i].visible = false;
 			}
 		}
 		for (let [i, e] of this.explosions.entries()) {
@@ -210,6 +220,8 @@ export class Main extends MainBase {
 					}
 				}
 			} else {
+				this.balls[e.ball].velocity = vec3(0, 0, 0.01);
+				this.balls[e.ball].position[1] -= 4;
 				this.explosions.splice(i, 1);
 			}
 		}
@@ -228,15 +240,32 @@ export class Main extends MainBase {
 		this.human_controller.draw(caller, this.uniforms);
 		// TABLE
 		this.table.draw(caller, this.uniforms);
+
+		if (this.reset_balls && this.splines.length === this.balls.length) {
+			let dif = 0;
+			for (let i = 0; i < this.balls.length; i++) {
+				let spline = this.splines[i];
+				this.balls[i].position = spline.get_position(this.spline_t);
+				dif += this.balls[i].position.minus(this.initial_positions[i]).norm();
+			}
+			this.spline_t += t_sim / 1000;
+			if (dif < 0.1) {
+				this.spline_t = 0;
+				this.splines = [];
+				this.reset_balls = false;
+				for (let i = 0; i < this.balls.length; i++)
+					this.balls[i].on_board = true;
+			}
+		}
 	}
 
 	render_controls() { // render_controls(): Sets up a panel of interactive HTML elements, including
 		// render_controls(): Sets up a panel of interactive HTML elements, including
 		// buttons with key bindings for affecting this scene, and live info readouts.
-		this.control_panel.innerHTML += "Assignment 2: IK Engine";
+		this.control_panel.innerHTML += "Project";
 		this.new_line();
 		// TODO: You can add your button events for debugging. (optional)
-		this.key_triggered_button("Debug", ["Shift", "D"],
+		this.key_triggered_button("Debug", ["Shift", "d"],
 			() => this.human_controller.start_move(0, 0.3, 5, 0, 0, 15));
 
 		this.key_triggered_button("Aim right", ["l"],
@@ -255,6 +284,29 @@ export class Main extends MainBase {
 				this.balls[0].color = color(1, 1, 1, 1);
 				this.balls[0].position = vec3(0, 0, 4);
 				this.balls[0].velocity = vec3(0, 0, 0.01);
+				this.balls[0].visible = true;
+				this.balls[0].on_board = true;
+			});
+		this.key_triggered_button("Restart", ["e"],
+			() => {
+				console.log(this.balls[0]);
+				this.reset_balls = true;
+				this.splines = [];
+				for (let i = 0; i < this.balls.length; i++) {
+					this.splines.push(new Spline());
+					let spline = this.splines[i];
+					spline.add_point(this.balls[i].position.copy());
+					let init_pos = this.initial_positions[i];
+					spline.add_point(init_pos.copy());
+					this.spline_t = 0;
+					if (!this.balls[i].visible) {
+						this.balls[i].visible = true;
+						this.balls[i].position[1] += 4;
+						this.balls[i].velocity = vec3(0, 0, 0.01);
+					}
+				}
+
+
 			});
 	}
 }

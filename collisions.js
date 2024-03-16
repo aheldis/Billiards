@@ -52,8 +52,9 @@ class PhysicsEngine{
     }
   }
   update_positions(balls, dt){
-    for(let i=0; i<balls.length; i++){
-      balls[i].position = balls[i].position.plus(balls[i].velocity.times(dt))
+    for(let i=0; i < balls.length; i++){
+      if (balls[i].visible)
+        balls[i].position = balls[i].position.plus(balls[i].velocity.times(dt))
     }
   }
 
@@ -87,6 +88,8 @@ class PhysicsEngine{
 
   collide_walls(balls){
     for(let i=0; i<balls.length; i++){
+      if (!balls[i].visible)
+        continue;
       if(balls[i].position[0]-balls[i].radius<this.left){
         balls[i].velocity[0] = Math.abs(balls[i].velocity[0])
       }
@@ -152,7 +155,7 @@ const Part_one_hermite_base = defs.Part_one_hermite_base =
 
         for (let i=0; i<N; i++){
           this.balls.push(new Ball(color(Math.random(), Math.random(), Math.random(), 1.0)))
-          this.balls[i].position = vec3(Math.random()*init_p, -1, Math.random()*init_p)
+          this.balls[i].position = vec3(Math.random() * init_p, -1, Math.random() * init_p)
           this.balls[i].velocity = vec3(Math.random() * init_v, 0, Math.random() * init_v )
         }
       }

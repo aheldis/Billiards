@@ -12,8 +12,9 @@ export class Spline {
         this.points.push(pos);
     }
 
-    get_position(s) {
-
+    get_position(t) {
+        let s = (Math.sin(t) + 1) / 2;
+        console.log(s);
         let p0 = this.points[0].copy();
         let p1 = this.points[1].copy();
         return  p0.times(2 * Math.pow(s, 3) - 3 * Math.pow(s, 2) + 1).plus(

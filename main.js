@@ -263,9 +263,10 @@ export class Main extends MainBase {
 				this.balls[i].position = spline.get_position(this.spline_t);
 				dif += this.balls[i].position.minus(this.initial_positions[i]).norm();
 			}
-			this.spline_t += t_sim / 1000;
-			if (dif < 0.5) {
-				console.log("dif");
+			// this.spline_t += t_sim / 1000;
+			this.spline_t += 10 * t_step ;
+			if (Math.abs(this.spline_t - Math.PI / 2) < 0.1) {
+				console.log("dif", Math.abs(this.spline_t - Math.PI / 2));
 				this.spline_t = 0;
 				this.splines = [];
 				this.reset_balls = false;
